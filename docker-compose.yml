@@ -1,0 +1,10 @@
+version: '2'
+services:
+  app:
+    build: .
+    volumes:
+      - .:/usr/src/app/
+    environment:
+      RANCHER_URL:
+      RANCHER_ACCESS_KEY:
+      RANCHER_SECRET_KEY:
