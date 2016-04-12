@@ -1,9 +1,6 @@
 # helper file to make it easier to access an irb session and test things out
-require "rest-client"
-
-access_key = ENV['RANCHER_ACCESS_KEY']
-secret_key = ENV['RANCHER_SECRET_KEY']
-rancher_uri = URI(ENV['RANCHER_URL'])
+require 'rest-client'
+require_relative 'lib/rancher_base_url'
 
 # hack to give IRB access to the local vars above:
 # http://stackoverflow.com/a/34101140
