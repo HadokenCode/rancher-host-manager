@@ -1,6 +1,7 @@
 # helper file to make it easier to access an irb session and test things out
 require 'rest-client'
 require_relative 'lib/rancher_base_url'
+require 'aws-sdk'
 
 # hack to give IRB access to the local vars above:
 # http://stackoverflow.com/a/34101140
