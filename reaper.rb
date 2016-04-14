@@ -14,18 +14,32 @@ end
 def kill_rancher_host(host_id)
   # it is probably better if we check what state the host is in but it also seems fine
   # to just try to deactivate it
-  result = RestClient.post "#{rancher_base_url}/hosts/#{host_id}?action=deactivate",
-    {:accept => :json}
+  puts "  deactivating #{host_id}"
+  begin
+    result = RestClient.post "#{rancher_base_url}/hosts/#{host_id}?action=deactivate",
+      {:accept => :json}
+      puts "  deactived #{host_id}"
+  rescue RestClient::UnprocessableEntity
+    # this should only happen if the host was already deactivated
+    puts "  unable to deactive #{host_id}"
+  end
+
+  # one time I tried this it failed to remove perhaps because there wasn't a long enough pause
+  sleep 1
 
   # this responds with a 202 with information about the host
   # if the host is already deactivated a 422 is returned with
   # {"id":"...","type":"error","links":{},"actions":{},"status":422,
   #  "code":"ActionNotAvailable","message":null,"detail":null,"fieldName":"action"}
 
-  result = RestClient.post "#{rancher_base_url}/hosts/#{host_id}?action=remove",
-    {:accept => :json}
-
-  # if the host is already removed then this returns a 422 like above
+  puts "  removing #{host_id}"
+  begin
+    result = RestClient.post "#{rancher_base_url}/hosts/#{host_id}?action=remove",
+      {:accept => :json}
+    puts "  removed #{host_id}"
+  rescue RestClient::UnprocessableEntity
+    puts "  unable to remove #{host_id}"
+  end
 end
 
 def current_reconnecting_hosts
