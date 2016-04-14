@@ -47,10 +47,9 @@ def ec2_host_running?(instance_id)
 
   begin
     status = ec2.describe_instance_status instance_ids: [instance_id]
-    # there seems to be a case where a EC2 doesn't raise a InvalidInstanceIDNotFound
-    # and instead the instance_statuses is an empty list.
-    # for now we'll play it safe and pretend that the host is running
-    return true if status.instance_statuses.empty?
+    # if a host has been terminated recently ec2 will return an empty statuses array
+    # if the host has been termnated a while ago then ec2 will raise IDNotFound exception
+    return false if status.instance_statuses.empty?
 
     status.instance_statuses.first.instance_state.name == "running"
   rescue Aws::EC2::Errors::InvalidInstanceIDNotFound
