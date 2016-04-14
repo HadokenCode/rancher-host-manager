@@ -40,12 +40,18 @@ end
 # this AWS user needs to have at least access to action "ec2:DescribeInstanceStatus"
 # and that action does not work with resource limitations so the resource needs to be "*"
 def ec2_host_running?(instance_id)
+  puts "Checking status of EC2 instance: #{instance_id}"
   ec2 = Aws::EC2::Client.new(
     region: "us-east-1"
   )
 
   begin
     status = ec2.describe_instance_status instance_ids: [instance_id]
+    # there seems to be a case where a EC2 doesn't raise a InvalidInstanceIDNotFound
+    # and instead the instance_statuses is an empty list.
+    # for now we'll play it safe and pretend that the host is running
+    return true if status.instance_statuses.empty?
+
     status.instance_statuses.first.instance_state.name == "running"
   rescue Aws::EC2::Errors::InvalidInstanceIDNotFound
     false
