@@ -1,5 +1,6 @@
 require 'rest-client'
 require_relative 'lib/rancher_base_url'
+require 'aws-sdk'
 
 def get_rancher_host_id(name)
   result = RestClient.get "#{rancher_base_url}/hosts?name=#{name}",
@@ -27,12 +28,39 @@ def kill_rancher_host(host_id)
   # if the host is already removed then this returns a 422 like above
 end
 
-# currently this has to make two requests to find the rancher id.  If the id was saved locally somewhere
-# then we could remove this requests
-def kill_self
-  ec2_instance_id = RestClient.get "http://169.254.169.254/2014-11-05/meta-data/instance-id"
-  host_id = get_rancher_host_id(ec2_instance_id)
-  kill_rancher_host host_id
+def current_reconnecting_hosts
+  result = RestClient.get "#{rancher_base_url}/hosts?agentState=reconnecting",
+    {:accept => :json}
+  hosts_result = JSON.parse(result)
+  hosts_result['data']
+end
+
+# need to set
+# ENV['AWS_ACCESS_KEY_ID'] and ENV['AWS_SECRET_ACCESS_KEY']
+# this AWS user needs to have at least access to action "ec2:DescribeInstanceStatus"
+# and that action does not work with resource limitations so the resource needs to be "*"
+def ec2_host_running?(instance_id)
+  ec2 = Aws::EC2::Client.new(
+    region: "us-east-1"
+  )
+
+  begin
+    status = ec2.describe_instance_status instance_ids: [instance_id]
+    status.instance_statuses.first.instance_state.name == "running"
+  rescue Aws::EC2::Errors::InvalidInstanceIDNotFound
+    false
+  end
+end
+
+def reap
+  current_reconnecting_hosts.each do |host|
+    # the rancher host name should be the EC2 instance id
+    name = host['name']
+    if not ec2_host_running? name
+      puts "Removing #{name} with rancher id #{host['id']}"
+      kill_rancher_host host['id']
+    end
+  end
 end
 
 # this is an nice way to test the methods above
@@ -43,15 +71,7 @@ end
 # IRB.conf[:MAIN_CONTEXT] = irb.context
 # irb.eval_input
 
-# now we need to wait for the kill signal
-# ideally we'd figure out our information on startup so we wouldn't need to
-# but the name probably won't be set yet in rancher so
-Signal.trap("TERM") {
-  puts "Removing rancher host..."
-  kill_self
-  puts "  done"
-  exit
-}
-
-# this should sleep forever
-sleep
+while true
+  reap
+  sleep 60
+end
