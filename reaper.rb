@@ -43,6 +43,8 @@ def kill_rancher_host(host_id)
 end
 
 def current_reconnecting_hosts
+  # occationally this seems to throw a RestClient::ServerBrokeConnection
+  # we are relying on dockers auto restart to restart this script in that case
   result = RestClient.get "#{rancher_base_url}/hosts?agentState=reconnecting",
     {:accept => :json}
   hosts_result = JSON.parse(result)
@@ -90,7 +92,12 @@ end
 # IRB.conf[:MAIN_CONTEXT] = irb.context
 # irb.eval_input
 
+# we sleep 60 seconds first because we are using dockers auto restart option
+# so if there is a network error we are going to see it in the log, the script will
+# die and then docker will restart it. In that case we want don't want to make a request
+# right away. If we do make a request right away we could get into a situation where where
+# an error in rancher, AWS, or the script could cause many rapid requests.
 while true
-  reap
   sleep 60
+  reap
 end
