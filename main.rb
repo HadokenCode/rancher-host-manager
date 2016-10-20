@@ -31,3 +31,7 @@ result = RestClient.put "#{rancher_base_url}/hosts/#{host_id}",
   :accept => :json
 
 puts "result from rancher put:\n #{result}"
+
+# rancher sometimes reports this process has failed, even though it hasn't
+# perhaps with an explicit exit code this issue will go away
+exit
