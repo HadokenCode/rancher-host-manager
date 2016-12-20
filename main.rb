@@ -2,7 +2,7 @@ require 'rest-client'
 require_relative 'lib/rancher_base_url'
 
 # need error checking here
-host_uuid = RestClient.get "http://rancher-metadata/2015-12-19/self/host/uuid"
+host_uuid = RestClient.get "http://rancher-metadata.rancher.internal/2015-12-19/self/host/uuid"
 puts "updating host with uuid: #{host_uuid}"
 # host_uuid = "dc8d94fd-3c4a-4b3d-b285-59663cd8bf43"
 
