@@ -24,3 +24,8 @@ assumes the userlevel container has been run and it correctly sets the EC2 info.
 One thing that we need to test is what happens if the machine is stopped in AWS and then restarted.
 With this container the host will be deleted from rancher, hopefully it will just be added again after the restart.
 
+Updating the Gemfile.lock:
+- Change Gemfile
+- run docker-compose run app bundle install
+- run docker-compose build
+   (this is not strictly necessary but useful to make sure you didn't break anything)
