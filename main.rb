@@ -8,6 +8,8 @@ puts "updating host with uuid: #{host_uuid}"
 
 result = RestClient.get "#{rancher_base_url}/hosts?uuid=#{host_uuid}",
   {:accept => :json}
+puts "result from rancher host info:\n #{result}"
+
 host_query_result = JSON.parse(result)
 # need error checking here
 host_id = host_query_result['data'].first['id']
